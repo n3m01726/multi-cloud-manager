@@ -126,56 +126,116 @@ router.get('/:userId/search', async (req, res) => {
   }
 });
 
+// backend/src/routes/files.js
+// REMPLACER la route /starred existante par celle-ci
+
 /**
- * --------------------------
- * Fichiers favoris (starred)
- * --------------------------
  * GET /files/:userId/starred
+ * Récupère tous les fichiers marqués comme favoris (starred) dans les métadonnées locales
  */
 router.get('/:userId/starred', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const cloudAccounts = await prisma.cloudAccount.findMany({ where: { userId } });
-    if (!cloudAccounts || cloudAccounts.length === 0) {
-      return res.json({ success: true, files: [], message: 'Aucun service cloud connecté' });
+    // Récupérer tous les fichiers marqués starred dans les métadonnées
+    const starredMetadata = await prisma.fileMetadata.findMany({
+      where: {
+        userId: userId,
+        starred: true
+      }
+    });
+
+    if (starredMetadata.length === 0) {
+      return res.json({ 
+        success: true, 
+        files: [], 
+        count: 0,
+        message: 'Aucun fichier favori' 
+      });
+    }
+
+    // Récupérer les comptes cloud
+    const cloudAccounts = await prisma.cloudAccount.findMany({ 
+      where: { userId } 
+    });
+
+    if (cloudAccounts.length === 0) {
+      return res.json({ 
+        success: true, 
+        files: [], 
+        message: 'Aucun service cloud connecté' 
+      });
     }
 
     let allFiles = [];
-    let failedProviders = [];
 
-    for (const account of cloudAccounts) {
+    // Pour chaque métadonnée starred, récupérer les infos du fichier depuis le cloud
+    for (const metadata of starredMetadata) {
       try {
-        if (account.provider === 'google_drive') {
-          const gdrive = new GoogleDriveConnector(account.accessToken, account.refreshToken, userId);
-          const files = await gdrive.listFiles('root');
-          if (Array.isArray(files)) allFiles = allFiles.concat(files.filter(f => f.starred || f.metadata?.starred));
+        const account = cloudAccounts.find(acc => acc.provider === metadata.cloudType);
+        
+        if (!account) continue;
 
-        } else if (account.provider === 'dropbox') {
-          if (!account.accessToken) continue;
-          const dropbox = new DropboxConnector(account.accessToken);
+        let fileInfo = null;
+
+        if (metadata.cloudType === 'google_drive') {
+          const gdrive = new GoogleDriveConnector(
+            account.accessToken, 
+            account.refreshToken, 
+            userId
+          );
+          
           try {
-            const files = await dropbox.listFiles('');
-            if (Array.isArray(files)) allFiles = allFiles.concat(files.filter(f => f.starred || f.metadata?.starred));
-          } catch (err) {
-            console.error(`Erreur Dropbox pour l'utilisateur ${userId}:`, err.message);
-            failedProviders.push(account.provider);
+            fileInfo = await gdrive.getFileMetadata(metadata.fileId);
+          } catch (error) {
+            console.warn(`Fichier ${metadata.fileId} introuvable dans Google Drive`);
+            continue;
+          }
+
+        } else if (metadata.cloudType === 'dropbox') {
+          const dropbox = new DropboxConnector(account.accessToken);
+          
+          try {
+            // Dropbox utilise le path au lieu de l'ID
+            // On doit chercher le fichier ou le stocker dans metadata
+            // Pour l'instant, on skip si on n'a pas le path
+            console.warn(`Dropbox favorites non encore supporté pour ${metadata.fileId}`);
+            continue;
+          } catch (error) {
+            console.warn(`Fichier ${metadata.fileId} introuvable dans Dropbox`);
+            continue;
           }
         }
-      } catch (err) {
-        console.error(`Erreur pour ${account.provider}:`, err.message);
-        failedProviders.push(account.provider);
+
+        if (fileInfo) {
+          // Enrichir avec les métadonnées locales
+          allFiles.push({
+            ...fileInfo,
+            tags: JSON.parse(metadata.tags || '[]'),
+            customName: metadata.customName,
+            description: metadata.description,
+            starred: true
+          });
+        }
+
+      } catch (error) {
+        console.error(`Erreur récupération fichier ${metadata.fileId}:`, error.message);
       }
     }
 
-    const response = { success: true, files: allFiles, count: allFiles.length };
-    if (failedProviders.length > 0) response.warning = `Certains services cloud n'ont pas pu être lus: ${failedProviders.join(', ')}`;
-
-    res.json(response);
+    res.json({ 
+      success: true, 
+      files: allFiles,
+      count: allFiles.length,
+      message: allFiles.length === 0 ? 'Fichiers favoris introuvables dans les clouds' : undefined
+    });
 
   } catch (error) {
     console.error('Erreur lors de la récupération des fichiers favoris:', error);
-    res.status(500).json({ success: false, error: 'Erreur lors de la récupération des fichiers favoris' });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erreur lors de la récupération des fichiers favoris' 
+    });
   }
 });
 
