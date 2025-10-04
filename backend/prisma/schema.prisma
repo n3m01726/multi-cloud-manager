@@ -15,6 +15,7 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String?
+  fileMetadata  FileMetadata[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -39,5 +40,23 @@ model CloudAccount {
   
   // Index pour recherche rapide
   @@unique([userId, provider])
+  @@index([userId])
+}
+
+model FileMetadata {
+  id          String   @id @default(cuid())
+  userId      String
+  fileId      String
+  cloudType   String
+  customName  String?
+  description String?
+  starred     Boolean  @default(false)
+  color       String?
+  tags        String?  // JSON string pour stocker les tags
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, fileId, cloudType])
   @@index([userId])
 }

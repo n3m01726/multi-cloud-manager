@@ -160,15 +160,17 @@ function App() {
         ) : (
           <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Section de connexion des services */}
-            <ConnectServices
+
+            {/* Liste des fichiers (affichée seulement si au moins un service est connecté) */}
+            {hasConnectedServices && (
+              <FileList userId={userId} />
+              
+            )}
+              <ConnectServices
               userId={userId}
               connectedServices={connectedServices}
               onUpdate={handleServicesUpdate}
             />
-            {/* Liste des fichiers (affichée seulement si au moins un service est connecté) */}
-            {hasConnectedServices && (
-              <FileList userId={userId} />
-            )}
           </div>
         )}
       </main>

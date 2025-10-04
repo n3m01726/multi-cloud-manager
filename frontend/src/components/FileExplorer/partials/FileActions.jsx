@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Move, Copy, Trash2, MoreVertical, X } from 'lucide-react';
+import { Move, Copy, Trash2, X } from 'lucide-react';
 import { filesService } from '../../../services/api';
 import FolderSelector from './FolderSelector';
 
@@ -7,6 +7,7 @@ export default function FileActions({
   file, 
   userId, 
   isOpen, 
+  position = { top: 0, left: 0 },
   onClose, 
   onSuccess,
   onError 
@@ -67,7 +68,6 @@ export default function FileActions({
     setLoading(true);
     try {
       // Note: L'API de suppression n'est pas encore implémentée
-      // Vous pouvez l'ajouter si nécessaire
       onError?.('Fonction de suppression non implémentée');
     } catch (err) {
       console.error('Erreur lors de la suppression:', err);
@@ -81,9 +81,17 @@ export default function FileActions({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
+      {/* Overlay */}
+      <div className="fixed inset-0 z-40" onClick={onClose} />
       
-      <div className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 min-w-48">
+      {/* Menu */}
+      <div 
+        className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 min-w-48"
+        style={{
+          top: `${position.top}px`,
+          left: `${position.left}px`
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-200">
           <h3 className="font-medium text-gray-900">Actions</h3>

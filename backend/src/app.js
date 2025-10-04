@@ -7,6 +7,7 @@ const { checkDatabaseConnection } = require('./config/database');
 // Import des routes
 const authRoutes = require('./routes/auth');
 const filesRoutes = require('./routes/files');
+const metadataRoutes = require('./routes/metadata');
 
 // Initialisation de l'application Express
 const app = express();
@@ -29,6 +30,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/auth', authRoutes);
 app.use('/files', filesRoutes);
+app.use('/metadata', metadataRoutes);
 
 // Route de santé
 app.get('/health', (req, res) => {

@@ -127,4 +127,78 @@ export const filesService = {
   },
 };
 
-export default api;
+/**
+ * Service de métadonnées (mise à jour)
+ */
+export const metadataService = {
+  /**
+   * Met à jour les tags d’un fichier ou dossier
+   * @param {string} userId
+   * @param {string} fileId
+   * @param {string} cloudType
+   * @param {Array} tags
+   * @param {Object} options { itemType: "file" | "folder", cascade: boolean }
+   */
+  async updateTags(userId, fileId, cloudType, tags, options = {}) {
+    const { itemType = 'file', cascade = false } = options;
+
+    const response = await api.put(
+      `/metadata/${userId}/${fileId}/tags?cascade=${cascade}`,
+      {
+        tags,
+        cloudType,
+        itemType
+      }
+    );
+
+    return response.data;
+  },
+
+  /**
+   * Récupère les métadonnées d’un fichier ou dossier
+   */
+  async getMetadata(userId, fileId, cloudType) {
+    const response = await api.get(`/metadata/${userId}/${fileId}`, {
+      params: { cloudType }
+    });
+    return response.data;
+  },
+
+  /**
+   * Met à jour toutes les métadonnées d’un fichier ou dossier
+   */
+  async updateMetadata(userId, fileId, cloudType, metadata) {
+    const response = await api.put(`/metadata/${userId}/${fileId}`, {
+      cloudType,
+      ...metadata
+    });
+    return response.data;
+  },
+
+  /**
+   * Recherche des fichiers ou dossiers par tags
+   */
+  async searchByTags(userId, tags, cloudType = null, itemType = null) {
+    const params = { tags: tags.join(',') };
+    if (cloudType) params.cloudType = cloudType;
+    if (itemType) params.itemType = itemType; // facultatif pour filtrer
+
+    const response = await api.get(`/metadata/${userId}/search`, { params });
+    return response.data;
+  },
+
+  /**
+   * Récupère tous les fichiers et dossiers favoris (starred) pour tous les providers
+   */
+  async getStarred(userId) {
+    const providers = ['google_drive', 'dropbox'];
+    const allResults = await Promise.all(
+      providers.map(async (cloudType) => {
+        const params = { starred: 'true', cloudType };
+        const response = await api.get(`/metadata/${userId}/search`, { params });
+        return response.data.results || [];
+      })
+    );
+    return allResults.flat();
+  }
+};

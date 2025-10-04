@@ -2,7 +2,7 @@ import { Search, RefreshCw } from 'lucide-react';
 
 export default function Tabs({ activeTab, setActiveTab, toggleSearchBar, showSearchBar, onRefresh }) {
   const tabs = [
-    { id: 'all', label: 'Tous', activeColor: 'bg-indigo-100 text-indigo-600' },
+    { id: 'favorites', label: 'Favorites', activeColor: 'bg-indigo-100 text-indigo-600' },
     { id: 'google_drive', label: 'Google Drive', activeColor: 'bg-[#0F9D58] text-green-100' },
     { id: 'dropbox', label: 'Dropbox', activeColor: 'bg-[#0061FE] text-blue-100' },
   ];
