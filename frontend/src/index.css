@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+body {
+font-family: 'Bricolage Grotesque', sans-serif;
+overflow-x: hidden;
+}

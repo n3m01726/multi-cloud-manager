@@ -1,0 +1,43 @@
+// Schéma de base de données pour le Multi-Cloud Manager
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modèle utilisateur
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations avec les services cloud
+  cloudAccounts CloudAccount[]
+}
+
+// Modèle pour stocker les tokens OAuth2 des services cloud
+model CloudAccount {
+  id           String   @id @default(uuid())
+  userId       String
+  provider     String   // "google_drive" ou "dropbox"
+  accessToken  String   // Token OAuth2 (devrait être chiffré en production)
+  refreshToken String?  // Token de rafraîchissement
+  expiresAt    DateTime? // Date d'expiration du token
+  email        String?  // Email du compte cloud
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relation avec l'utilisateur
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Index pour recherche rapide
+  @@unique([userId, provider])
+  @@index([userId])
+}
