@@ -1,10 +1,10 @@
 // frontend/src/components/FileExplorer/Favorites.jsx
-// REMPLACER par cette version corrigée
+// REMPLACER par cette version corrigÃ©e
 
 import { useState, useEffect } from 'react';
 import { Star, RefreshCw } from 'lucide-react';
 import FileItem from './partials/FileItem';
-import { filesService } from '../../services/api';
+import { filesService } from '../services/api';
 
 export default function Favorites({ userId, onDownload, onFolderClick, onFileMoved, onFileCopied }) {
   const [starredFiles, setStarredFiles] = useState([]);
@@ -24,10 +24,10 @@ export default function Favorites({ userId, onDownload, onFolderClick, onFileMov
     setError(null);
     
     try {
-      console.log('🌟 Chargement des favoris pour userId:', userId);
+      console.log('ðŸŒŸ Chargement des favoris pour userId:', userId);
       const response = await filesService.getStarred(userId);
       
-      console.log('📦 Réponse API:', response);
+      console.log('ðŸ“¦ RÃ©ponse API:', response);
       
       if (response.success) {
         setStarredFiles(response.files || []);
@@ -42,7 +42,7 @@ export default function Favorites({ userId, onDownload, onFolderClick, onFileMov
         setStarredFiles([]);
       }
     } catch (err) {
-      console.error('❌ Erreur loadFavorites:', err);
+      console.error('âŒ Erreur loadFavorites:', err);
       setError('Erreur lors du chargement des favoris');
       setStarredFiles([]);
     } finally {
@@ -71,7 +71,7 @@ export default function Favorites({ userId, onDownload, onFolderClick, onFileMov
           onClick={handleRefresh}
           className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
-          Réessayer
+          RÃ©essayer
         </button>
       </div>
     );
@@ -88,7 +88,7 @@ export default function Favorites({ userId, onDownload, onFolderClick, onFileMov
         <Star className="w-16 h-16 mx-auto mb-4 opacity-30" />
         <p className="text-lg font-medium mb-2">Aucun fichier favori</p>
         <p className="text-sm">
-          Marquez des fichiers comme favoris en cliquant sur l'icône de tag 🏷️
+          Marquez des fichiers comme favoris en cliquant sur l'icÃ´ne de tag ðŸ·ï¸
         </p>
       </div>
     );

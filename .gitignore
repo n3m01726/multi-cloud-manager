@@ -149,3 +149,4 @@ coverage/
 .env.local
 *.sql
 DOCS/
+backend/prisma/dev.db

@@ -4,17 +4,18 @@ import Navigation from './partials/Navigation';
 import SearchBar from './partials/SearchBar';
 import Files from './partials/Files';
 import Footer from './partials/Footer';
-import Favorites from './Favorites';
-import { filesService } from '../../services/api';
+//import Favorites from './views/Favorites';
+import { filesService, metadataService } from '../../services/api';
 
 export default function FileExplorer({ userId }) {
   const [files, setFiles] = useState([]);
+  const [metadata, setMetadata] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [downloading, setDownloading] = useState(null);
-  const [activeTab, setActiveTab] = useState('google_drive'); // default tab
+  const [activeTab, setActiveTab] = useState('google_drive');
   const [searchBarVisible, setSearchBarVisible] = useState(false);
 
   const [providerStates, setProviderStates] = useState({
@@ -23,10 +24,12 @@ export default function FileExplorer({ userId }) {
   });
 
   // --------------------------
-  // Chargement des fichiers
+  // Chargement des fichiers ET mÃ©tadonnÃ©es
   // --------------------------
   useEffect(() => {
-    if (activeTab !== 'favorites') loadFiles();
+    if (activeTab !== 'favorites') {
+      loadFiles();
+    }
   }, [userId, activeTab]);
 
   const loadFiles = async (folderId = null, folderName = '', provider = null) => {
@@ -36,7 +39,12 @@ export default function FileExplorer({ userId }) {
     try {
       const targetProvider = provider || activeTab;
       const response = await filesService.listFiles(userId, folderId);
-      setFiles(response.files || []);
+      const filesList = response.files || [];
+      setFiles(filesList);
+
+      // Charger les mÃ©tadonnÃ©es pour tous les fichiers affichÃ©s
+      await loadMetadataForFiles(filesList);
+
       if (provider) {
         setProviderStates(prev => ({
           ...prev,
@@ -52,6 +60,25 @@ export default function FileExplorer({ userId }) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Charger les mÃ©tadonnÃ©es de tous les fichiers
+  const loadMetadataForFiles = async (filesList) => {
+    try {
+      const metadataPromises = filesList.map(file =>
+        metadataService.getMetadata(userId, file.id, file.provider)
+          .then(res => res.success && res.metadata ? res.metadata : null)
+          .catch(() => null)
+      );
+      
+      const metadataResults = await Promise.all(metadataPromises);
+      const validMetadata = metadataResults.filter(m => m !== null);
+      setMetadata(validMetadata);
+      
+      console.log('ðŸ“Š MÃ©tadonnÃ©es chargÃ©es:', validMetadata.length, 'sur', filesList.length);
+    } catch (err) {
+      console.error('Erreur chargement mÃ©tadonnÃ©es:', err);
     }
   };
 
@@ -77,7 +104,7 @@ export default function FileExplorer({ userId }) {
   };
 
   const handleBackClick = () => {
-    if (activeTab === 'favorites') return; // pas de breadcrumb pour favoris
+    if (activeTab === 'favorites') return;
     const currentProvider = activeTab;
     const currentState = providerStates[currentProvider];
     if (!currentState.folderHistory.length) return;
@@ -92,7 +119,7 @@ export default function FileExplorer({ userId }) {
   };
 
   const handleHomeClick = () => {
-    if (activeTab === 'favorites') return; // pas d'action home pour favoris
+    if (activeTab === 'favorites') return;
     if (activeTab === 'all') {
       setProviderStates({
         google_drive: { currentFolder: null, currentFolderName: '', folderHistory: [] },
@@ -114,7 +141,7 @@ export default function FileExplorer({ userId }) {
   const handleSearch = async e => {
     e?.preventDefault();
     if (!searchQuery.trim()) {
-      if (activeTab === 'favorites') return; // on ne fait rien pour favoris
+      if (activeTab === 'favorites') return;
       const providerState = providerStates[activeTab];
       loadFiles(providerState.currentFolder, providerState.currentFolderName, activeTab);
       return;
@@ -123,7 +150,9 @@ export default function FileExplorer({ userId }) {
     setError(null);
     try {
       const response = await filesService.searchFiles(userId, searchQuery);
-      setFiles(response.files || []);
+      const filesList = response.files || [];
+      setFiles(filesList);
+      await loadMetadataForFiles(filesList);
     } catch (err) {
       setError('Erreur lors de la recherche');
       console.error(err);
@@ -133,14 +162,14 @@ export default function FileExplorer({ userId }) {
   };
 
   // --------------------------
-  // Téléchargement
+  // TÃ©lÃ©chargement
   // --------------------------
   const handleDownload = async file => {
     setDownloading(file.id);
     try {
       await filesService.downloadFile(userId, file.provider, file.id, file.name);
     } catch (err) {
-      setError(`Erreur lors du téléchargement de ${file.name}`);
+      setError(`Erreur lors du tÃ©lÃ©chargement de ${file.name}`);
       console.error(err);
     } finally {
       setDownloading(null);
@@ -148,10 +177,10 @@ export default function FileExplorer({ userId }) {
   };
 
   // --------------------------
-  // Rafraîchir les fichiers
+  // RafraÃ®chir les fichiers
   // --------------------------
   const handleRefresh = () => {
-    if (activeTab === 'favorites') return; // favoris gérés dans leur propre component
+    if (activeTab === 'favorites') return;
     const currentState = providerStates[activeTab];
     loadFiles(currentState?.currentFolder || null, currentState?.currentFolderName || '', activeTab);
   };
@@ -161,7 +190,7 @@ export default function FileExplorer({ userId }) {
   // --------------------------
   const handleTabChange = newTab => {
     setActiveTab(newTab);
-    if (newTab === 'favorites') return; // favoris chargés par Favorites.jsx
+    if (newTab === 'favorites') return;
     const providerState = providerStates[newTab];
     loadFiles(providerState.currentFolder, providerState.currentFolderName, newTab);
   };
@@ -224,7 +253,7 @@ export default function FileExplorer({ userId }) {
         {error && (
           <div className="m-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center justify-between">
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">✕</button>
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">âœ•</button>
           </div>
         )}
 
@@ -240,11 +269,14 @@ export default function FileExplorer({ userId }) {
         ) : (
           <Files
             files={filteredFiles}
+            metadata={metadata}
             loading={loading}
             userId={userId}
             onFolderClick={handleFolderClick}
             onDownload={handleDownload}
             downloading={downloading}
+            onFileMoved={() => loadFiles()}
+            onFileCopied={() => loadFiles()}
           />
         )}
 
