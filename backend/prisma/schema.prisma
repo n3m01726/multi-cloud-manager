@@ -53,6 +53,7 @@ model FileMetadata {
   starred     Boolean  @default(false)
   color       String?
   tags        String?  // JSON string pour stocker les tags
+  tagColors   String?  // après la ligne "tags"
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

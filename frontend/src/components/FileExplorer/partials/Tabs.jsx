@@ -2,9 +2,9 @@ import { Search, RefreshCw } from 'lucide-react';
 
 export default function Tabs({ activeTab, setActiveTab, toggleSearchBar, showSearchBar, onRefresh }) {
   const tabs = [
-    { id: 'favorites', label: 'Favorites', activeColor: 'bg-indigo-100 text-indigo-600' },
+  // { id: 'favorites', label: 'Favorites', activeColor: 'bg-indigo-100 text-indigo-600' },
     { id: 'google_drive', label: 'Google Drive', activeColor: 'bg-[#0F9D58] text-green-100' },
-    { id: 'dropbox', label: 'Dropbox', activeColor: 'bg-[#0061FE] text-blue-100' },
+  //  { id: 'dropbox', label: 'Dropbox', activeColor: 'bg-[#0061FE] text-blue-100' },
   ];
 
   return (
@@ -24,6 +24,8 @@ export default function Tabs({ activeTab, setActiveTab, toggleSearchBar, showSea
             {tab.label}
           </button>
         ))}
+        <button disable className='cursor-not-allowed px-4 py-2 rounded-md font-medium transition-colors text-gray-400 bg-gray-100'>Dropbox</button>
+        <button disable className='cursor-not-allowed px-4 py-2 rounded-md font-medium transition-colors text-gray-400 bg-gray-100'>MEGA.nz</button>
       </div>
 
       {/* Boutons d'action à droite */}

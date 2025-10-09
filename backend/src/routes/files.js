@@ -266,7 +266,79 @@ router.get('/:userId/metadata/:provider/:fileId', async (req, res) => {
     res.status(500).json({ success: false, error: 'Erreur lors de la récupération des métadonnées' });
   }
 });
+/**
+ * --------------------------
+ * Proxy pour prévisualisation d'images
+ * --------------------------
+ * GET /files/:userId/image-proxy/:provider/:fileId
+ * Télécharge l'image côté serveur et la renvoie au client
+ */
+router.get('/:userId/image-proxy/:provider/:fileId', async (req, res) => {
+  const { userId, provider, fileId } = req.params;
 
+  console.log('🖼️ Proxy image demandé:', { userId, provider, fileId });
+
+  try {
+    const account = await prisma.cloudAccount.findUnique({
+      where: { userId_provider: { userId, provider } }
+    });
+
+    if (!account) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Service cloud non connecté' 
+      });
+    }
+
+    if (provider === 'google_drive') {
+      const gdrive = new GoogleDriveConnector(
+        account.accessToken, 
+        account.refreshToken,
+        userId
+      );
+
+      try {
+        // Récupérer les métadonnées pour obtenir le mimeType
+        const metadata = await gdrive.getFileMetadata(fileId);
+        
+        // Télécharger le fichier
+        const fileBuffer = await gdrive.downloadFile(fileId);
+        
+        console.log('✅ Image téléchargée:', {
+          size: fileBuffer.length,
+          mimeType: metadata.mimeType
+        });
+
+        // Définir les headers appropriés
+        res.setHeader('Content-Type', metadata.mimeType);
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache 1 an
+        res.setHeader('Content-Length', fileBuffer.length);
+        
+        // Envoyer l'image
+        res.send(fileBuffer);
+        
+      } catch (driveError) {
+        console.error('❌ Erreur téléchargement image:', driveError.message);
+        res.status(500).json({ 
+          success: false, 
+          error: `Erreur téléchargement: ${driveError.message}` 
+        });
+      }
+    } else {
+      res.status(400).json({ 
+        success: false, 
+        error: 'Provider non supporté' 
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Erreur proxy image:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erreur serveur' 
+    });
+  }
+});
 /**
  * --------------------------
  * Prévisualisation d'un fichier
@@ -381,5 +453,11 @@ router.post('/:userId/download', async (req, res) => {
     res.status(500).json({ success: false, error: 'Erreur lors du téléchargement' });
   }
 });
+
+
+
+
+
+
 
 module.exports = router;

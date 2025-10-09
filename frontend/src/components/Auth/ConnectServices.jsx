@@ -1,6 +1,6 @@
 // Composant pour connecter les services cloud
 import { useState } from 'react';
-import { Cloud, Check } from 'lucide-react';
+import {Check } from 'lucide-react';
 import { authService } from '../../services/api';
 
 export default function ConnectServices({ userId, connectedServices, onUpdate }) {
@@ -51,20 +51,9 @@ export default function ConnectServices({ userId, connectedServices, onUpdate })
   }
 };
 
-
-
-
-
-
-  
   return (
     <div className="w-full max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Cloud className="w-6 h-6" />
-          Connecter vos services cloud
-        </h2>
-
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
             {error}
@@ -110,6 +99,13 @@ export default function ConnectServices({ userId, connectedServices, onUpdate })
                 >
                   Déconnecter
                 </button>
+                <button
+      onClick={handleConnectDropbox}
+      disabled
+      className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+    >
+      {loading ? 'Connexion...' : '+'}
+    </button>
               </div>
             ) : (
               <button
@@ -154,15 +150,39 @@ export default function ConnectServices({ userId, connectedServices, onUpdate })
       </button>
     </div>
   ) : (
-    <button
-      onClick={handleConnectDropbox}
-      disabled={loading}
-      className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-    >
-      {loading ? 'Connexion...' : 'Connecter'}
-    </button>
+<button disable className='cursor-not-allowed px-4 py-2 rounded-md font-medium transition-colors text-gray-400 bg-gray-100'>Coming soon</button>
   )}
+  
 </div>
+
+
+<div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+  <div className="flex items-center gap-3">
+    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+      <svg className="w-6 h-6" viewBox="0 0 24 24">
+        <path
+          fill="#0061FF"
+          d="M6 1.5l-6 4 6 4 6-4-6-4zm12 0l-6 4 6 4 6-4-6-4zM0 13.5l6 4 6-4-6-4-6 4zm12 0l6 4 6-4-6-4-6 4zM6 18l6 4.5 6-4.5-6-4-6 4.5z"
+        />
+      </svg>
+    </div>
+    <div>
+      <h3 className="font-semibold text-lg">MEGA.nz</h3>
+      <p className="text-sm text-gray-600">
+        {connectedServices?.meganz 
+          ? 'Connecté' 
+          : 'Stockage cloud MEGA.nz'}
+      </p>
+    </div>
+  </div>
+
+<button disable className='cursor-not-allowed px-4 py-2 rounded-md font-medium transition-colors text-gray-400 bg-gray-100'>Coming soon</button>
+  
+</div>
+
+
+
+
 
         </div>
 

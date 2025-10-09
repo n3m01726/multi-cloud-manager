@@ -149,6 +149,69 @@ router.get('/status/:userId', async (req, res) => {
 });
 
 /**
+ * GET /auth/user/info/:userId
+ * Récupère les informations détaillées de l'utilisateur depuis Google Drive
+ */
+router.get('/user/info/:userId', async (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    // Récupérer l'utilisateur et son compte Google Drive
+    const user = await prisma.user.findUnique({ 
+      where: { id: userId },
+      include: { 
+        cloudAccounts: {
+          where: { provider: 'google_drive' }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
+    }
+
+    const googleAccount = user.cloudAccounts.find(acc => acc.provider === 'google_drive');
+    
+    if (!googleAccount) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Aucun compte Google Drive connecté',
+        user: { name: user.name, email: user.email }
+      });
+    }
+
+    // Créer un client Google authentifié
+    const oauth2Client = createAuthenticatedGoogleClient(
+      googleAccount.accessToken, 
+      googleAccount.refreshToken
+    );
+    
+    // Récupérer les infos utilisateur depuis Google
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+    const userInfo = await oauth2.userinfo.get();
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        name: userInfo.data.name || user.name,
+        email: userInfo.data.email || user.email,
+        picture: userInfo.data.picture,
+        givenName: userInfo.data.given_name,
+        familyName: userInfo.data.family_name
+      }
+    });
+
+  } catch (error) {
+    console.error('Erreur récupération info utilisateur:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erreur lors de la récupération des informations utilisateur' 
+    });
+  }
+});
+
+/**
  * DELETE /auth/disconnect/:userId/:provider
  */
 router.delete('/disconnect/:userId/:provider', async (req, res) => {

@@ -1,6 +1,4 @@
 // backend/src/routes/metadata.js
-// CRÉER ce nouveau fichier
-
 const express = require('express');
 const router = express.Router();
 const { prisma } = require('../config/database');
@@ -11,7 +9,7 @@ const { prisma } = require('../config/database');
  */
 router.put('/:userId/:fileId/tags', async (req, res) => {
   const { userId, fileId } = req.params;
-  const { tags, cloudType } = req.body;
+  const { tags, tagColors, cloudType } = req.body;
 
   if (!Array.isArray(tags)) {
     return res.status(400).json({ 
@@ -21,6 +19,16 @@ router.put('/:userId/:fileId/tags', async (req, res) => {
   }
 
   try {
+    const updateData = { 
+      tags: JSON.stringify(tags), 
+      updatedAt: new Date() 
+    };
+
+    // Ajouter tagColors si fourni
+    if (tagColors) {
+      updateData.tagColors = JSON.stringify(tagColors);
+    }
+
     const metadata = await prisma.fileMetadata.upsert({
       where: {
         userId_fileId_cloudType: {
@@ -29,27 +37,26 @@ router.put('/:userId/:fileId/tags', async (req, res) => {
           cloudType
         }
       },
-      update: { 
-        tags: JSON.stringify(tags), 
-        updatedAt: new Date() 
-      },
+      update: updateData,
       create: {
         userId,
         fileId,
         cloudType,
-        tags: JSON.stringify(tags)
+        ...updateData
       }
     });
 
-    // Décoder les tags pour la réponse
+    // Décoder les tags et tagColors pour la réponse
     const responseMetadata = {
       ...metadata,
-      tags: JSON.parse(metadata.tags || '[]')
+      tags: JSON.parse(metadata.tags || '[]'),
+      tagColors: metadata.tagColors ? JSON.parse(metadata.tagColors) : {}
     };
 
+    console.log('✅ Tags sauvegardés:', responseMetadata);
     res.json({ success: true, metadata: responseMetadata });
   } catch (error) {
-    console.error('Erreur mise à jour tags:', error);
+    console.error('❌ Erreur mise à jour tags:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -64,6 +71,8 @@ router.put('/:userId/:fileId/tags', async (req, res) => {
 router.get('/:userId/:fileId', async (req, res) => {
   const { userId, fileId } = req.params;
   const { cloudType } = req.query;
+
+  console.log('📖 GET Metadata:', { userId, fileId, cloudType });
 
   if (!cloudType) {
     return res.status(400).json({ 
@@ -83,18 +92,21 @@ router.get('/:userId/:fileId', async (req, res) => {
       }
     });
 
-    // Décoder les tags si metadata existe
+    // Décoder les tags et tagColors si metadata existe
     const responseMetadata = metadata ? {
       ...metadata,
-      tags: JSON.parse(metadata.tags || '[]')
+      tags: JSON.parse(metadata.tags || '[]'),
+      tagColors: metadata.tagColors ? JSON.parse(metadata.tagColors) : {}
     } : null;
+
+    console.log('✅ Métadonnées trouvées:', responseMetadata);
 
     res.json({ 
       success: true, 
       metadata: responseMetadata 
     });
   } catch (error) {
-    console.error('Erreur récupération métadonnées:', error);
+    console.error('❌ Erreur récupération métadonnées:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -111,11 +123,15 @@ router.put('/:userId/:fileId', async (req, res) => {
   const { 
     cloudType, 
     tags, 
+    tagColors,  // ⚠️ AJOUT IMPORTANT
     customName, 
     description, 
     starred, 
     color 
   } = req.body;
+
+  console.log('📝 UPDATE Metadata:', { userId, fileId, cloudType });
+  console.log('📦 Données reçues:', req.body);
 
   if (!cloudType) {
     return res.status(400).json({ 
@@ -127,6 +143,7 @@ router.put('/:userId/:fileId', async (req, res) => {
   try {
     const updateData = {};
     if (tags !== undefined) updateData.tags = JSON.stringify(tags);
+    if (tagColors !== undefined) updateData.tagColors = JSON.stringify(tagColors);  // ⚠️ AJOUT IMPORTANT
     if (customName !== undefined) updateData.customName = customName;
     if (description !== undefined) updateData.description = description;
     if (starred !== undefined) updateData.starred = starred;
@@ -150,15 +167,17 @@ router.put('/:userId/:fileId', async (req, res) => {
       }
     });
 
-    // Décoder les tags pour la réponse
+    // Décoder les tags et tagColors pour la réponse
     const responseMetadata = {
       ...metadata,
-      tags: JSON.parse(metadata.tags || '[]')
+      tags: JSON.parse(metadata.tags || '[]'),
+      tagColors: metadata.tagColors ? JSON.parse(metadata.tagColors) : {}
     };
 
+    console.log('✅ Métadonnées sauvegardées:', responseMetadata);
     res.json({ success: true, metadata: responseMetadata });
   } catch (error) {
-    console.error('Erreur mise à jour métadonnées:', error);
+    console.error('❌ Erreur mise à jour métadonnées:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -200,10 +219,11 @@ router.get('/:userId/search', async (req, res) => {
       orderBy: { updatedAt: 'desc' }
     });
 
-    // Décoder les tags pour chaque résultat
+    // Décoder les tags et tagColors pour chaque résultat
     const decodedResults = results.map(metadata => ({
       ...metadata,
-      tags: JSON.parse(metadata.tags || '[]')
+      tags: JSON.parse(metadata.tags || '[]'),
+      tagColors: metadata.tagColors ? JSON.parse(metadata.tagColors) : {}
     }));
 
     res.json({ success: true, results: decodedResults });

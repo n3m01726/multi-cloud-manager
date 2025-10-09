@@ -18,7 +18,8 @@ function getGoogleAuthUrl() {
   const oauth2Client = createGoogleOAuthClient();
   const scopes = [
     'https://www.googleapis.com/auth/drive', // Accès complet à Google Drive
-    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.email', // Email de l'utilisateur
+    'https://www.googleapis.com/auth/userinfo.profile', // Nom et photo de profil
   ];
 
   return oauth2Client.generateAuthUrl({

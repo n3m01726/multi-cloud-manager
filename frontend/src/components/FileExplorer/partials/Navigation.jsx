@@ -37,8 +37,8 @@ export default function Navigation({ folderHistory, currentFolderName, onBack, o
               >
                 {folder.name}
               </button>
-              {index < folderHistory.length - 1 && (
-                <span className="text-gray-400 mx-1">/</span>
+              {index < folderHistory.length - 0 && (
+                <span className="text-gray-400 ml-1">/</span>
               )}
             </div>
           ))}

@@ -1,8 +1,15 @@
-// Composant principal de l'application
 import { useState, useEffect } from 'react';
-import ConnectServices from './components/Auth/ConnectServices';
-import FileList from './components/FileExplorer/FileExplorer';
-import Navbar from './components/Navbar/Navbar';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import Header from './components/Layout/Header';
+import Footer from './components/Layout/Footer';
+import Connections from './pages/Connections';
+import Settings from './pages/Settings';
+import ProtectedRoute from './components/Layout/ProtectedRoute';
+import Home from './pages/Home';
+import FileExplorerPage from './pages/FileExplorerPage';
+
+import Roadmap from './pages/Roadmap';
+import NotFound from './pages/NotFound';
 import { authService } from './services/api';
 
 function App() {
@@ -10,6 +17,7 @@ function App() {
   const [connectedServices, setConnectedServices] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Vérifier si l'utilisateur revient d'une authentification OAuth
@@ -30,8 +38,8 @@ function App() {
       localStorage.setItem('userId', returnedUserId);
       setUserId(returnedUserId);
       
-      // Nettoyer l'URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Nettoyer l'URL et rediriger vers les fichiers
+      window.history.replaceState({}, document.title, '/files');
       
       // Charger les informations de l'utilisateur
       loadUserStatus(returnedUserId);
@@ -74,11 +82,9 @@ function App() {
       setUserId(null);
       setUser(null);
       setConnectedServices(null);
+      navigate('/');
     }
   };
-
-  const hasConnectedServices = connectedServices && 
-    (connectedServices.google_drive || connectedServices.dropbox);
 
   if (loading) {
     return (
@@ -93,93 +99,67 @@ function App() {
 
   return (
     <div className="min-h-screen bg-blue-50">
-      {/* Header fixe */}
-      {user && (
-        <header className="w-full bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
-          <div className="max-w-7xl mx-auto pl-4 pr-6 sm:pl-6 sm:pr-8 lg:pl-8 lg:pr-10">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo et titre */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5 text-white"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
-                    <path d="M12 12v9"></path>
-                    <path d="m8 17 4 4 4-4"></path>
-                  </svg>
-                </div>
-                <h1 className="text-lg font-bold text-gray-900">Multi-Cloud Manager</h1>
-              </div>
+      <Header user={user} onLogout={handleLogout} />
+      
+      <main className={`${user ? 'pt-24' : 'pt-8'} pb-8`}>
+        <Routes>
+          {/* Route publique - Page d'accueil */}
+          <Route 
+            path="/" 
+            element={
+              userId ? <Navigate to="/files" replace /> : <Home />
+            } 
+          />
 
-              {/* Menu utilisateur à droite */}
-              <Navbar user={user} onLogout={handleLogout} />
-            </div>
-          </div>
-        </header>
-      )}
+          {/* Routes protégées */}
+          <Route 
+            path="/files" 
+            element={
+              <ProtectedRoute userId={userId}>
+                <FileExplorerPage userId={userId} />
+              </ProtectedRoute>
+            } 
+          />
 
-      {/* Contenu principal avec padding-top pour compenser le header fixed */}
-      <main className={`${user ? 'pt-24' : ''} pb-8`}>
-        {!userId ? (
-          // Écran de bienvenue
-          <div className="max-w-2xl mx-auto px-6 text-center">
-            <div className="bg-white rounded-lg shadow-xl p-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Bienvenue sur Multi-Cloud Manager
-              </h2>
-              <p className="text-gray-600 mb-8">
-                Connectez vos services cloud préférés et gérez tous vos fichiers depuis une seule interface.
-              </p>
-              <div className="flex justify-center">
-                <button
-                  onClick={async () => {
-                    try {
-                      const { authUrl } = await authService.getGoogleAuthUrl();
-                      window.location.href = authUrl;
-                    } catch (err) {
-                      alert('Erreur lors de la connexion');
-                    }
-                  }}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
-                >
-                  Commencer avec Google Drive
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Section de connexion des services */}
+          <Route 
+            path="/connections" 
+            element={
+              <ProtectedRoute userId={userId}>
+                <Connections 
+                  userId={userId}
+                  connectedServices={connectedServices}
+                  onUpdate={handleServicesUpdate}
+                />
+              </ProtectedRoute>
+            } 
+          />
 
-            {/* Liste des fichiers (affichée seulement si au moins un service est connecté) */}
-            {hasConnectedServices && (
-              <FileList userId={userId} />
-              
-            )}
-              <ConnectServices
-              userId={userId}
-              connectedServices={connectedServices}
-              onUpdate={handleServicesUpdate}
-            />
-          </div>
-        )}
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute userId={userId}>
+                <Settings user={user} />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Route publique - Roadmap */}
+          <Route path="/roadmap" element={<Roadmap />} />
+
+          {/* Route de déconnexion */}
+          <Route 
+            path="/logout" 
+            element={
+              <Navigate to="/" replace state={{ logout: true }} />
+            } 
+          />
+
+          {/* Page 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </main>
-
-      {/* Footer */}
-      <footer className="mt-12 py-6 text-center text-sm text-gray-900">
-        <p>Multi-Cloud Manager v1.0.0 - MVP</p>
-        <p className="mt-1 text-gray-900">Google Drive connecté • Dropbox connecté</p>
-      </footer>
+      
+      <Footer />
     </div>
   );
 }

@@ -185,7 +185,7 @@ class GoogleDriveConnector {
   /**
    * Génère une URL de prévisualisation pour un fichier Google Drive
    * @param {string} fileId - ID du fichier
-   * @param {string} userId - ID de l'utilisateur (pour l'URL proxy)
+   * @param {string} userId - ID de l'utilisateur (optionnel)
    * @returns {Promise<Object>} URLs de prévisualisation et métadonnées
    */
   async getPreviewUrl(fileId, userId = null) {
@@ -198,29 +198,111 @@ class GoogleDriveConnector {
       const file = response.data;
       const mimeType = file.mimeType;
 
-      // Pour les documents Google (Docs, Sheets, Slides), utiliser webViewLink
+      console.log('📄 Fichier récupéré:', {
+        id: file.id,
+        name: file.name,
+        mimeType: mimeType,
+        webViewLink: file.webViewLink,
+        webContentLink: file.webContentLink,
+        thumbnailLink: file.thumbnailLink
+      });
+
+      // Pour les documents Google (Docs, Sheets, Slides)
       if (mimeType.includes('google-apps')) {
+        // Construire l'URL embed manuellement
+        const embedUrl = `${file.webViewLink.replace('/edit', '/preview')}`;
+        
         return {
           id: file.id,
           name: file.name,
           mimeType: mimeType,
-          previewUrl: file.webViewLink,
+          previewUrl: embedUrl,
+          webViewLink: file.webViewLink,
           downloadUrl: file.webContentLink,
           thumbnailUrl: file.thumbnailLink,
           provider: 'google_drive',
         };
       }
 
-      // Pour les autres fichiers, utiliser l'URL proxy du backend
-      const previewUrl = userId 
-        ? `/files/preview-proxy/google_drive/${fileId}?userId=${userId}`
-        : `/files/preview-proxy/google_drive/${fileId}`;
+      // Pour les images - URLs directes Google Drive
+      if (mimeType.startsWith('image/')) {
+        // Utiliser le thumbnail en haute résolution (jusqu'à 1600px)
+        // C'est la seule URL qui fonctionne sans authentification pour les fichiers privés
+        const thumbnailHQ = file.thumbnailLink 
+          ? file.thumbnailLink.replace('=s220', '=s1600')
+          : null;
 
+        return {
+          id: file.id,
+          name: file.name,
+          mimeType: mimeType,
+          previewUrl: thumbnailHQ, // URL principale pour l'affichage
+          thumbnailUrl: thumbnailHQ,
+          thumbnailLink: file.thumbnailLink,
+          webViewLink: file.webViewLink,
+          webContentLink: file.webContentLink,
+          downloadUrl: file.webContentLink,
+          provider: 'google_drive',
+        };
+      }
+
+      // Pour les PDFs
+      if (mimeType === 'application/pdf') {
+        const pdfPreviewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+        
+        return {
+          id: file.id,
+          name: file.name,
+          mimeType: mimeType,
+          previewUrl: pdfPreviewUrl,
+          webViewLink: file.webViewLink,
+          webContentLink: file.webContentLink,
+          downloadUrl: file.webContentLink,
+          provider: 'google_drive',
+        };
+      }
+
+      // Pour les vidéos et audio
+      if (mimeType.startsWith('video/') || mimeType.startsWith('audio/')) {
+        // Google Drive ne permet pas toujours le streaming direct
+        // On utilise webContentLink pour le téléchargement
+        return {
+          id: file.id,
+          name: file.name,
+          mimeType: mimeType,
+          previewUrl: file.webContentLink,
+          webViewLink: file.webViewLink,
+          webContentLink: file.webContentLink,
+          downloadUrl: file.webContentLink,
+          thumbnailUrl: file.thumbnailLink,
+          provider: 'google_drive',
+        };
+      }
+
+      // Pour les fichiers texte
+      if (mimeType.startsWith('text/') || 
+          ['application/json', 'application/xml'].includes(mimeType)) {
+        // On pourrait télécharger le contenu ici si nécessaire
+        return {
+          id: file.id,
+          name: file.name,
+          mimeType: mimeType,
+          previewUrl: file.webViewLink,
+          webViewLink: file.webViewLink,
+          webContentLink: file.webContentLink,
+          downloadUrl: file.webContentLink,
+          provider: 'google_drive',
+        };
+      }
+
+      // Fallback pour les autres types de fichiers
       return {
         id: file.id,
         name: file.name,
         mimeType: mimeType,
-        previewUrl: previewUrl,
+        previewUrl: file.webViewLink,
+        webViewLink: file.webViewLink,
+        webContentLink: file.webContentLink,
         downloadUrl: file.webContentLink,
         thumbnailUrl: file.thumbnailLink,
         provider: 'google_drive',

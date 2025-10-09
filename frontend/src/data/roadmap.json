@@ -1,0 +1,60 @@
+{
+  "version": "0.8.0",
+  "lastUpdate": "2025-10-06",
+  "sections": [
+    {
+      "phase": "All Done Tasks",
+      "status": "done",
+      "description": "Done and ready to be released.",
+      "tasks": [
+        "Set up Node.js backend + SQLite via Prisma",
+        "Implement cloud API connectors (Drive, Dropbox, MEGA)",
+        "Create FileExplorer core component",
+        "Basic authentication and token storage",
+        "Refactoring the project folder structure",
+        "Persistent tag colors and folder navigation",
+        "Establishing clear, separated routes for main sections."
+      ]
+    },
+    {
+      "phase": "Core Structure",
+      "status": "in-progress",
+      "description": "Foundational architecture.",
+      "tasks": [
+        "Implement at least one cloud API connectors (Dropbox, MEGA, OneDrive)"
+      ]
+    },
+    {
+      "phase": "UI & Experience",
+      "status": "in-progress",
+      "description": "Refining the interface for usability and consistency.",
+      "tasks": [
+        "Tooltip and preview improvements",
+        "Responsive design pass with Tailwind",
+        "Enhance header and navigation bar"
+      ]
+    },
+    {
+      "phase": "Enhancements",
+      "status": "planned",
+      "description": "User quality-of-life and deeper cloud features.",
+      "tasks": [
+        "Unified dashboard with cloud summaries",
+        "Activity history (uploads, syncs, deletions)",
+        "User preferences (theme, view mode)",
+        "Keyboard shortcuts and quick actions"
+      ]
+    },
+    {
+      "phase": "Ideas & Backlog",
+      "status": "backlog",
+      "description": "Long-term additions to expand beyond MVP.",
+      "tasks": [
+        "Team and shared spaces",
+        "Cloud sync monitoring with alerts",
+        "Public sharing links",
+        "AI-assisted search and file tagging"
+      ]
+    }
+  ]
+}

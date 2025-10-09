@@ -38,6 +38,10 @@ export const authService = {
   async disconnect(userId, provider) {
     const res = await api.delete(`/auth/disconnect/${userId}/${provider}`);
     return res.data;
+  },
+  async getUserInfo(userId) {
+    const res = await api.get(`/auth/user/info/${userId}`);
+    return res.data;
   }
 };
 
