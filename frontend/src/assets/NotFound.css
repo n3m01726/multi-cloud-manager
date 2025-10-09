@@ -1,0 +1,77 @@
+.notfound-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.animated-404 {
+  position: relative;
+  display: inline-block;
+}
+
+.repairman {
+  position: absolute;
+  left: -60px;
+  animation: walk 3s infinite linear;
+}
+
+@keyframes walk {
+  0% { transform: translateX(-60px); }
+  40% { transform: translateX(50px) rotate(-10deg); }
+  50% { transform: translateX(60px) rotate(10deg); }
+  60% { transform: translateX(50px) rotate(-10deg); }
+  100% { transform: translateX(-60px); }
+}
+
+.digit {
+  display: inline-block;
+  position: relative;
+}
+
+.left {
+  animation: hit 3s infinite;
+}
+
+@keyframes hit {
+  45% { transform: rotate(0); }
+  50% { transform: rotate(-10deg); }
+  55% { transform: rotate(0); }
+}
+
+.zero {
+  animation: shake 3s infinite;
+}
+
+@keyframes shake {
+  50% { transform: translateX(0); }
+  52% { transform: translateX(2px); }
+  54% { transform: translateX(-2px); }
+  56% { transform: translateX(1px); }
+  58% { transform: translateX(0); }
+}
+
+.sparks {
+  position: absolute;
+  top: 48%;
+  left: 55%;
+  pointer-events: none;
+}
+
+.sparks span {
+  position: absolute;
+  font-size: 1.5rem;
+  color: orange;
+  opacity: 0;
+  animation: spark 3s infinite;
+}
+
+.sparks span:nth-child(1) { animation-delay: 1.4s; }
+.sparks span:nth-child(2) { animation-delay: 1.6s; }
+.sparks span:nth-child(3) { animation-delay: 1.8s; }
+
+@keyframes spark {
+  50% { opacity: 1; transform: translateY(-10px) scale(1.2); }
+  70% { opacity: 0; transform: translateY(-20px) scale(0.8); }
+  100% { opacity: 0; }
+}

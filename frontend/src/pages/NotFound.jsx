@@ -1,15 +1,23 @@
 import { Link } from 'react-router-dom';
+import '../assets/NotFound.css';
 
 function NotFound() {
   return (
-    <div className="max-w-2xl mx-auto px-6 text-center">
-      <div className="bg-white rounded-lg shadow-xl p-12">
-        <div className="text-6xl mb-4">🔍</div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Page introuvable
-        </h2>
+    <div className="max-w-2xl mx-auto px-6 text-center notfound-container">
+    
+        <div className="text-6xl mb-4 relative">
+          <span className="repairman">🧑‍🔧</span>
+        </div>
+        <h1 className="text-9xl font-bold text-gray-900 mb-4 animated-404">
+          <span className="digit four left">4</span>
+          <span className="digit zero">0</span>
+          <span className="digit four right">4</span>
+        </h1>
+        <div className="sparks">
+          <span>*</span><span>*</span><span>*</span>
+        </div>
         <p className="text-gray-600 mb-8">
-          Désolé, la page que vous recherchez n'existe pas.
+          On répare ça... enfin, on essaie.
         </p>
         <Link
           to="/"
@@ -18,7 +26,7 @@ function NotFound() {
           Retour à l'accueil
         </Link>
       </div>
-    </div>
+    
   );
 }
 

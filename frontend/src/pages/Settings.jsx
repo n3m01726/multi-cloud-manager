@@ -55,6 +55,16 @@ function Settings({ user }) {
                 Prochainement
               </button>
             </div>
+
+                        <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-gray-900">Tooltips</p>
+                <p className="text-sm text-gray-500">Affichage des tooltips</p>
+              </div>
+              <button disabled className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
+                Prochainement
+              </button>
+            </div>
           </div>
         </div>
 

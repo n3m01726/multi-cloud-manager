@@ -68,7 +68,7 @@ export default function FileExplorer({ userId }) {
           ...prev[provider].folderHistory,
           {
             id: prev[provider].currentFolder || 'root',
-            name: prev[provider].currentFolderName || 'Accueil'
+            name: prev[provider].currentFolderName || ''
           }
         ]
       }

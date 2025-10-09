@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Navbar from '../Navbar/Navbar';
 import { authService } from '../../services/api';
-
+import { Cloud } from 'lucide-react';
 function Header({ user, onLogout }) {
   const location = useLocation();
   const [userName, setUserName] = useState(user?.name || '');
@@ -43,30 +43,14 @@ function Header({ user, onLogout }) {
         <div className="flex items-center justify-between h-16">
           {/* Logo et titre */}
           <Link to="/files" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 text-white"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
-                <path d="M12 12v9"></path>
-                <path d="m8 17 4 4 4-4"></path>
-              </svg>
+                     <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Cloud className="w-5 h-5 text-white" />
             </div>
-            <div className="flex flex-col">
-              <h1 className="text-lg font-bold text-gray-900 leading-tight">Multi-Cloud Manager</h1>
-              {userName && (
-                <span className="text-xs text-gray-500">{userName}!</span>
-              )}
-            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              CloudHub
+            </span>
+          </div> 
           </Link>
 
           {/* Menu utilisateur à droite */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Download, Share2, Printer, Loader2, Calendar, HardDrive, Tag, Star, ExternalLink, AlertCircle } from 'lucide-react';
+import { X, Download, Share2, Printer, Loader2, Calendar, HardDrive, Tag, Star, ExternalLink, AlertCircle, Maximize } from 'lucide-react';
 
 export default function FilePreviewModal({ 
   file, 
@@ -137,49 +137,56 @@ export default function FilePreviewModal({
       );
     }
 
-    // Images - Support amélioré
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext) || mimeType.startsWith('image/')) {
-      // Pour Google Drive, utiliser le thumbnailLink en haute résolution
-      // C'est la seule URL qui fonctionne de manière fiable sans authentification
-      const imageUrl = previewUrl || previewData.thumbnailUrl;
-      const imageUrlOK = previewData.webContentLink.replace('export=download', 'export=view');
+    // frontend/src/components/FileExplorer/partials/FilePreviewModal.jsx
+// 👉 REMPLACER la section "Images" dans renderPreview() (ligne ~90-120)
 
-      console.log('🖼️ URL image finale:', imageUrl);
-      
-      if (!imageUrl) {
-        return (
-          <div className="flex flex-col items-center justify-center h-[500px] bg-gray-50 rounded-lg">
-            <AlertCircle className="w-12 h-12 text-gray-400 mb-3" />
-            <p className="text-gray-600 mb-2">Impossible de charger l'image</p>
-            <p className="text-sm text-gray-500 mb-4">URL de prévisualisation non disponible</p>
-            <a 
-              href={previewData.webViewLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Ouvrir dans Google Drive
-            </a>
-          </div>
-        );
-      }
-      
+// Images - Support amélioré avec fallback
+if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext) || mimeType.startsWith('image/')) {
+  const ImageWithFallback = () => {
+    // ✅ Utiliser DIRECTEMENT le proxy backend (le thumbnailLink échoue systématiquement)
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const [imgSrc] = useState(`${API_URL}/files/${userId}/thumbnail/${file.provider}/${file.id}`);
+    const [hasError, setHasError] = useState(false);
+
+    const handleImageError = () => {
+      console.error('❌ Impossible de charger l\'image via le proxy');
+      setHasError(true);
+    };
+
+    if (hasError) {
       return (
-        <div className="flex items-center justify-center bg-gray-900 rounded-lg p-4 h-[500px]">
-          <img 
-            src={imageUrlOK} 
-            alt={file.name} 
-            className="max-h-full max-w-full object-contain rounded shadow-lg"
-            onError={(e) => {
-              console.error('❌ Erreur chargement image:', imageUrl);
-              setError('Impossible de charger l\'image. Essayez de l\'ouvrir dans Google Drive.');
-            }}
-            onLoad={() => console.log('✅ Image chargée avec succès')}
-          />
+        <div className="flex flex-col items-center justify-center h-[500px] bg-gray-50 rounded-lg">
+          <AlertCircle className="w-12 h-12 text-gray-400 mb-3" />
+          <p className="text-gray-600 mb-2">Impossible de charger l'image</p>
+          <p className="text-sm text-gray-500 mb-4">L'aperçu n'est pas disponible</p>
+          <a 
+            href={previewData.webViewLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Ouvrir dans Google Drive
+          </a>
         </div>
       );
     }
+
+    return (
+      <div className="flex items-center justify-center bg-gray-900 rounded-lg p-4 h-[500px]">
+        <img 
+          src={imgSrc} 
+          alt={file.name} 
+          className="max-h-full max-w-full object-contain rounded shadow-lg"
+          onError={handleImageError}
+          onLoad={() => console.log('✅ Image chargée via proxy backend')}
+        />
+      </div>
+    );
+  };
+
+  return <ImageWithFallback />;
+}
 
     // Vidéos
     if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext) || mimeType.startsWith('video/')) {
@@ -324,12 +331,12 @@ export default function FilePreviewModal({
             >
               <Share2 className="w-5 h-5 text-gray-700" />
             </button>
+
+          
             <button 
-              onClick={() => onPrint(file)} 
               className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-              title="Imprimer"
-            >
-              <Printer className="w-5 h-5 text-gray-700" />
+              title="Maximize">
+              <Maximize className="w-5 h-5 text-gray-700" />
             </button>
             <div className="w-px h-6 bg-gray-300 mx-1" />
             <button 
@@ -461,6 +468,7 @@ export default function FilePreviewModal({
                     <p className="text-sm text-gray-700 pl-6 break-words">
                       {file.name}
                     </p>
+                    <p>url : {previewData.thumbnailLink} </p>
                   </div>
                 )}
               </div>

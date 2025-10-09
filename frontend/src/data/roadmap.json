@@ -13,7 +13,9 @@
         "Basic authentication and token storage",
         "Refactoring the project folder structure",
         "Persistent tag colors and folder navigation",
-        "Establishing clear, separated routes for main sections."
+        "Establishing clear, separated routes for main sections.",
+        "Tooltip and preview improvements",
+        "Enhance header and navigation bar"
       ]
     },
     {
@@ -29,9 +31,7 @@
       "status": "in-progress",
       "description": "Refining the interface for usability and consistency.",
       "tasks": [
-        "Tooltip and preview improvements",
-        "Responsive design pass with Tailwind",
-        "Enhance header and navigation bar"
+        "Responsive design pass with Tailwind"
       ]
     },
     {

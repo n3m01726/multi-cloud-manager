@@ -219,7 +219,7 @@ class GoogleDriveConnector {
           previewUrl: embedUrl,
           webViewLink: file.webViewLink,
           downloadUrl: file.webContentLink,
-          thumbnailUrl: file.thumbnailLink,
+          thumbnailUrl: file.thumbnailLink, 
           provider: 'google_drive',
         };
       }

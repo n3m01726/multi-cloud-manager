@@ -9,6 +9,7 @@ const { tokenRefreshMiddleware } = require('../middleware/tokenRefresh');
 // Middleware pour refresh des tokens
 router.use(tokenRefreshMiddleware);
 
+
 /**
  * --------------------------
  * Liste des fichiers
@@ -126,8 +127,76 @@ router.get('/:userId/search', async (req, res) => {
   }
 });
 
-// backend/src/routes/files.js
-// REMPLACER la route /starred existante par celle-ci
+/**
+ * --------------------------
+ * Thumbnail proxy (fallback pour images)
+ * --------------------------
+ * GET /files/:userId/thumbnail/:provider/:fileId
+ * Sert de fallback quand thumbnailLink ne fonctionne pas
+ */
+router.get('/:userId/thumbnail/:provider/:fileId', async (req, res) => {
+  const { userId, provider, fileId } = req.params;
+
+  console.log('🖼️ Thumbnail fallback demandé:', { userId, provider, fileId });
+
+  try {
+    const account = await prisma.cloudAccount.findUnique({
+      where: { userId_provider: { userId, provider } }
+    });
+
+    if (!account) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Service cloud non connecté' 
+      });
+    }
+
+    if (provider === 'google_drive') {
+      const gdrive = new GoogleDriveConnector(
+        account.accessToken, 
+        account.refreshToken,
+        userId
+      );
+
+      try {
+        const { buffer, mimeType } = await gdrive.getThumbnail(fileId);
+        
+        console.log('✅ Thumbnail généré:', {
+          size: buffer.length,
+          mimeType
+        });
+
+        // Headers pour cache agressif (les images changent rarement)
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30 jours
+        res.setHeader('Content-Length', buffer.length);
+        
+        res.send(buffer);
+        
+      } catch (thumbnailError) {
+        console.error('❌ Erreur génération thumbnail:', thumbnailError.message);
+        res.status(500).json({ 
+          success: false, 
+          error: `Erreur thumbnail: ${thumbnailError.message}` 
+        });
+      }
+    } else {
+      res.status(400).json({ 
+        success: false, 
+        error: 'Provider non supporté pour les thumbnails' 
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Erreur proxy thumbnail:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erreur serveur' 
+    });
+  }
+});
+
+// 👆 À placer AVANT les autres routes dans files.js, vers la ligne 200
 
 /**
  * GET /files/:userId/starred
